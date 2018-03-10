@@ -1,3 +1,8 @@
+# Personal information and credentials
+students.db
+elenco_studenti.csv
+config.toml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
