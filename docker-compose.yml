@@ -1,0 +1,25 @@
+version: '3.2'
+
+services:
+  presence:
+    build: .
+    container_name: presence
+    restart: always
+    expose:
+      - "8000"
+    volumes:
+      - type: bind
+        source: /var/docker/presence/students.db
+        target: /students.db
+    networks:
+      - default
+      - proxy-network
+    environment:
+      - VIRTUAL_HOST=presence.izzo.pro
+      - VIRTUAL_PORT=8000
+      - LETSENCRYPT_HOST=presence.izzo.pro
+      - LETSENCRYPT_EMAIL=federico.izzo42@gmail.com
+
+networks:
+  proxy-network:
+    external: true
