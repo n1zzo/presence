@@ -4,8 +4,7 @@ from email.message import EmailMessage
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import io
-import qrcode
+import pyqrcode
 import smtplib
 
 
@@ -20,14 +19,11 @@ def email(code, recipient, config):
     Per registrarti al laboratorio fornisci questo codice: {}""".format(code)
     html = """\
     <html>
-        print(req_json)
       <head></head>
       <body>
         <p>
         <h3>
-        print(req_json)
             Mostra questo qr-code ai responsabili di laboratorio per
-        print(req_json)
             registrarti.
         </h3>
         </p>
@@ -35,7 +31,6 @@ def email(code, recipient, config):
            <img src="cid:qrcode">
         </p>
       </body>
-
     </html>
     """
 
@@ -56,8 +51,8 @@ def email(code, recipient, config):
     s.quit()
 
 
-def create_qrcode(code):
-    qr = qrcode.make(code)
-    img = io.BytesIO()
-    qr.save(img, format="PNG")
-    return img.getvalue()
+def create_qrcode(data):
+    qr = pyqrcode.create(data)
+    qr.png("code.png", scale=12, module_color=[0xF4, 0x22, 0x72], background=[0x20, 0x20, 0x20])
+    with open("code.png", "rb") as f:
+        return f.read()

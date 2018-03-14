@@ -20,13 +20,25 @@ class StudentsList:
         resp.body = json.dumps(content)
 
 
-class Status:
+class Registered:
     def on_get(self, req, resp):
         """Handles GET requests"""
         content = {}
         params = req.params
         with DB() as db:
-            content["list"] = db.get_status(params["labid"])
+            content["list"] = db.get_registered(params["labid"])
+        content["timestamp"] = int(time.time())
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(content)
+
+
+class NotYet:
+    def on_get(self, req, resp):
+        """Handles GET requests"""
+        content = {}
+        params = req.params
+        with DB() as db:
+            content["list"] = db.get_not_yet_registered(params["labid"])
         content["timestamp"] = int(time.time())
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(content)
@@ -46,5 +58,6 @@ class Register:
 
 api = falcon.API()
 api.add_route('/list', StudentsList())
-api.add_route('/status', Status())
+api.add_route('/registered', Registered())
+api.add_route('/notyet', NotYet())
 api.add_route('/register', Register())

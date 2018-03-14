@@ -1,4 +1,5 @@
-qrcode
 falcon
-pillow
 gunicorn
+pypng
+pyqrcode
+toml

@@ -47,13 +47,29 @@ class DB:
         self.conn.commit()
         return students
 
-    def get_status(self, lab_id):
+    def get_registered(self, lab_id):
         students = []
         c = self.conn.cursor()
         t = (lab_id, )
         c.execute('SELECT * FROM students '
                   'NATURAL JOIN registrations '
-                  'WHERE lab_id=?', t)
+                  'WHERE lab_id=? '
+                  'ORDER BY timestamp', t)
+        rows = c.fetchall()
+        for row in rows:
+            students.append(Student(row[0], row[1], row[2], row[3])._asdict())
+        self.conn.commit()
+        return students
+
+    def get_not_yet_registered(self, lab_id):
+        students = []
+        c = self.conn.cursor()
+        t = (lab_id, )
+        c.execute('SELECT * '
+                  'FROM students s '
+                  'WHERE NOT EXISTS (SELECT NULL '
+                  'FROM registrations r '
+                  'WHERE s.codice_persona = r.codice_persona)')
         rows = c.fetchall()
         for row in rows:
             students.append(Student(row[0], row[1], row[2], row[3])._asdict())
