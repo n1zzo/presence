@@ -1,6 +1,7 @@
 FROM python
 
-RUN pip install -r requirements.txt
+COPY requirements.txt /presence/requirements.txt
+RUN pip install -r /presence/requirements.txt
 COPY . /presence
 WORKDIR /presence
 

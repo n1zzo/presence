@@ -8,7 +8,9 @@ from collections import namedtuple
 
 
 Student = namedtuple("student",
-                     "codice_persona matricola nome email")
+                     "codice_persona matricola nome email sessions")
+
+Session = namedtuple("session", "begin end")
 
 
 class DB:
@@ -55,7 +57,8 @@ class DB:
                       'WHERE codice_persona = ?', t)
         rows = c.fetchall()
         for row in rows:
-            students.append(Student(row[0], row[1], row[2], row[3])._asdict())
+            student = Student(row[0], row[1], row[2], row[3], None)._asdict()
+            students.append(student)
         self.conn.commit()
         return students
 
@@ -69,7 +72,15 @@ class DB:
                   'ORDER BY timestamp', t)
         rows = c.fetchall()
         for row in rows:
-            students.append(Student(row[0], row[1], row[2], row[3])._asdict())
+            student = Student(row[0], row[1], row[2], row[3], [])._asdict()
+            t = (student["codice_persona"], lab_id)
+            c.execute('SELECT begin, end FROM analytics '
+                      'WHERE codice_persona = ? AND lab_id = ?', t)
+            s_rows = c.fetchall()
+            for s_row in s_rows:
+                student["sessions"].append(Session(s_row[0],
+                                                   s_row[1])._asdict())
+            students.append(student)
         self.conn.commit()
         return students
 
@@ -95,7 +106,7 @@ class DB:
         with open(csv_path) as csv_file:
             students_reader = csv.reader(csv_file)
             for student in students_reader:
-                s = Student(student[0], student[1], student[2], student[3])
+                s = Student(*(student + [None]))
                 t = (s.codice_persona, s.matricola, s.nome, s.email)
                 c.execute("INSERT INTO students VALUES (?, ?, ?, ?)", t)
         self.conn.commit()
@@ -106,18 +117,16 @@ class DB:
         c.execute("INSERT OR IGNORE INTO registrations VALUES (?, ?, ?)", t)
         self.conn.commit()
 
-    def timer_start(self, student_id, lab_id):
+    def timer(self, action, student_id, lab_id):
         c = self.conn.cursor()
-        t = (student_id, lab_id, int(time.time()), None)
-        c.execute("INSERT OR IGNORE INTO analytics VALUES (?, ?, ?, ?)", t)
-        self.conn.commit()
-
-    def timer_stop(self, student_id, lab_id):
-        c = self.conn.cursor()
-        t = (int(time.time()), lab_id, student_id)
-        c.execute("UPDATE analytics "
-                  "SET end = ? WHERE begin IS NOT NULL AND lab_id = ? "
-                  "AND codice_persona = ?", t)
+        if action is "start":
+            t = (student_id, lab_id, int(time.time()), None)
+            c.execute("INSERT OR IGNORE INTO analytics VALUES (?, ?, ?, ?)", t)
+        elif action is "stop":
+            t = (int(time.time()), lab_id, student_id)
+            c.execute("UPDATE analytics "
+                      "SET end = ? WHERE begin IS NOT NULL AND lab_id = ? "
+                      "AND codice_persona = ?", t)
         self.conn.commit()
 
 

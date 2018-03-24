@@ -99,35 +99,19 @@ class Register:
                                 'timestamp': int(time.time())})
 
 
-class TimerStart:
+class Timer:
     def on_post(self, req, resp):
         req_json = json.loads(req.stream.read().decode('utf-8'))
         try:
             section = req_json["section"]
+            action = req_json["action"]
+            if action not in {"start", "stop"}:
+                resp.status = falcon.HTTP_500
+                resp.body = get_error_json("Unknown action!")
+                return
             with DB(section) as db:
-                db.timer_start(req_json["id"], req_json["labid"])
-        except KeyError:
-            resp.status = falcon.HTTP_500
-            resp.body = get_error_json("Missing call parameter!")
-            return
-        except FileNotFoundError:
-            resp.status = falcon.HTTP_500
-            resp.body = get_error_json("Section does not exists!")
-            return
-        with DB(section) as db:
-            students = db.get_students(student_id=req_json["id"])
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps({'registered': students,
-                                'timestamp': int(time.time())})
-
-
-class TimerStop:
-    def on_post(self, req, resp):
-        req_json = json.loads(req.stream.read().decode('utf-8'))
-        try:
-            section = req_json["section"]
-            with DB(section) as db:
-                db.timer_stop(req_json["id"], req_json["labid"])
+                resp.body = json.dumps({"id": req_json["id"], "labid": req_json["labid"]})
+                db.timer(action, req_json["id"], req_json["labid"])
         except KeyError:
             resp.status = falcontimerstart0
             resp.body = get_error_json("Missing call parameter!")
@@ -148,6 +132,4 @@ api.add_route('/list', StudentsList())
 api.add_route('/registered', Registered())
 api.add_route('/notyet', NotYet())
 api.add_route('/register', Register())
-api.add_route('/timerstart', TimerStart())
-api.add_route('/timerstop', TimerStop())
-# api.add_route('/analytics', Analytics())
+api.add_route('/timer', Timer())
