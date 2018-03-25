@@ -1,7 +1,10 @@
 # Personal information and credentials
-students.db
-elenco_studenti.csv
+students*.db
+studenti_*.csv
 config.toml
+
+# Virtualenv
+presence
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

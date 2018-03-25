@@ -26,6 +26,7 @@ class DB:
         if not os.path.isfile(dbname):
             raise FileNotFoundError
         self.conn = sqlite3.connect(dbname)
+        #self.conn.set_trace_callback(print)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -57,7 +58,7 @@ class DB:
                       'WHERE codice_persona = ?', t)
         rows = c.fetchall()
         for row in rows:
-            student = Student(row[0], row[1], row[2], row[3], None)._asdict()
+            student = Student(*(row + ([], )))._asdict()
             students.append(student)
         self.conn.commit()
         return students
@@ -72,7 +73,8 @@ class DB:
                   'ORDER BY timestamp', t)
         rows = c.fetchall()
         for row in rows:
-            student = Student(row[0], row[1], row[2], row[3], [])._asdict()
+            student = Student(*(row[0:4] + ([], )))._asdict()
+            # Extract sessions from DB
             t = (student["codice_persona"], lab_id)
             c.execute('SELECT begin, end FROM analytics '
                       'WHERE codice_persona = ? AND lab_id = ?', t)
@@ -96,7 +98,7 @@ class DB:
                   'AND r.lab_id = ?)', t)
         rows = c.fetchall()
         for row in rows:
-            students.append(Student(row[0], row[1], row[2], row[3])._asdict())
+            students.append(Student(*(row + ([], )))._asdict())
         self.conn.commit()
         return students
 
@@ -119,14 +121,14 @@ class DB:
 
     def timer(self, action, student_id, lab_id):
         c = self.conn.cursor()
-        if action is "start":
+        if action == "start":
             t = (student_id, lab_id, int(time.time()), None)
             c.execute("INSERT OR IGNORE INTO analytics VALUES (?, ?, ?, ?)", t)
-        elif action is "stop":
+        elif action == "stop":
             t = (int(time.time()), lab_id, student_id)
             c.execute("UPDATE analytics "
-                      "SET end = ? WHERE begin IS NOT NULL AND lab_id = ? "
-                      "AND codice_persona = ?", t)
+                      "SET end = ? WHERE begin IS NOT NULL AND end is NULL "
+                      "AND lab_id = ? AND codice_persona = ?", t)
         self.conn.commit()
 
 

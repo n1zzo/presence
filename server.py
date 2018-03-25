@@ -1,7 +1,7 @@
+from db import DB
 import falcon
 import json
 import time
-from db import DB
 
 
 def get_error_json(string):
@@ -110,10 +110,9 @@ class Timer:
                 resp.body = get_error_json("Unknown action!")
                 return
             with DB(section) as db:
-                resp.body = json.dumps({"id": req_json["id"], "labid": req_json["labid"]})
                 db.timer(action, req_json["id"], req_json["labid"])
         except KeyError:
-            resp.status = falcontimerstart0
+            resp.status = falcon.HTTP_500
             resp.body = get_error_json("Missing call parameter!")
             return
         except FileNotFoundError:
