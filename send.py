@@ -9,14 +9,12 @@ import smtplib
 
 
 def email(code, recipient, config):
-    msg = EmailMessage()
-    msg = MIMEMultipart('alternative')
+    # Create message container.
+    msg = MIMEMultipart('related')
     msg['Subject'] = 'QR Code per la registrazione al laboratorio'
     msg['From'] = config["SMTP"]["sender"]
     msg['To'] = recipient
-
-    text = """Il tuo client email non supporta le email basate su HTML.
-    Per registrarti al laboratorio fornisci questo codice: {}""".format(code)
+    
     html = """\
     <html>
       <head></head>
@@ -33,16 +31,15 @@ def email(code, recipient, config):
       </body>
     </html>
     """
-
-    part1 = MIMEText(text, 'plain')
-    part2 = MIMEText(html, 'html')
-
-    part3 = MIMEImage(create_qrcode(code))
-    part3.add_header('Content-ID', '<qrcode>')
-
-    msg.attach(part1)
-    msg.attach(part2)
-    msg.attach(part3)
+    
+    msgHtml = MIMEText(html, 'html')
+    msgImg = MIMEImage(create_qrcode(code), name="qrcode.png")
+    msgImg.add_header('Content-ID', '<qrcode>')
+    msgImg.add_header('Content-Disposition', 'attachment', filename="qrcode.png")
+    msgImg.add_header('Content-Disposition', 'inline', filename="qrcode.png")
+    
+    msg.attach(msgHtml)
+    msg.attach(msgImg)
 
     s = smtplib.SMTP(config["SMTP"]["server"])
     s.starttls()
