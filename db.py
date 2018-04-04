@@ -8,7 +8,7 @@ from collections import namedtuple
 
 
 Student = namedtuple("student",
-                     "codice_persona matricola nome email sessions")
+                     "codice_persona matricola nome email gruppo sessions")
 
 Session = namedtuple("session", "begin end")
 
@@ -35,16 +35,22 @@ class DB:
     def create_tables(self):
         c = self.conn.cursor()
         # Create table
-        c.execute('''CREATE TABLE IF NOT EXISTS students
-                     (codice_persona text, matricola text,
-                      nome text, email text)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS registrations
-                     (codice_persona TEXT, lab_id INTEGER, timestamp INTEGER,
-                      UNIQUE(codice_persona, lab_id))''')
-        c.execute('''CREATE TABLE IF NOT EXISTS analytics
-                     (codice_persona TEXT, lab_id INTEGER,
-                      begin INTEGER, end INTEGER,
-                      UNIQUE(codice_persona, lab_id, begin))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS students (
+                     codice_persona text, matricola text,
+                     nome text, email text, `group` INTEGER)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS registrations (
+                     codice_persona TEXT, lab_id INTEGER, timestamp INTEGER,
+                     UNIQUE(codice_persona, lab_id))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS analytics (
+                     codice_persona TEXT, lab_id INTEGER,
+                     begin INTEGER, end INTEGER,
+                     UNIQUE(codice_persona, lab_id, begin))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS groups (
+                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                     codice_1 TEXT NOT NULL,
+                     codice_2 TEXT NOT NULL,
+                     codice_3 TEXT,
+                     repo TEXT)''')
         self.conn.commit()
 
     def get_students(self, student_id=None):
@@ -73,7 +79,7 @@ class DB:
                   'ORDER BY timestamp', t)
         rows = c.fetchall()
         for row in rows:
-            student = Student(*(row[0:4] + ([], )))._asdict()
+            student = Student(*(row[0:5] + ([], )))._asdict()
             # Extract sessions from DB
             t = (student["codice_persona"], lab_id)
             c.execute('SELECT begin, end FROM analytics '
@@ -99,6 +105,20 @@ class DB:
         rows = c.fetchall()
         for row in rows:
             students.append(Student(*(row + ([], )))._asdict())
+        self.conn.commit()
+        return students
+
+    def get_groups(self):
+        students = []
+        c = self.conn.cursor()
+        c.execute('SELECT id, codice_persona, nome, email '
+                  'FROM groups, students '
+                  'WHERE codice_1 == codice_persona '
+                  'OR codice_2 == codice_persona '
+                  'OR codice_3 == codice_persona;')
+        rows = c.fetchall()
+        for row in rows:
+            students.append(row)
         self.conn.commit()
         return students
 
@@ -131,11 +151,14 @@ class DB:
                       "AND lab_id = ? AND codice_persona = ?", t)
         self.conn.commit()
 
-
-def main():
-    db = DB()
-    db.import_students("elenco_studenti.csv")
-
-
-if __name__ == "__main__":
-    main()
+    def import_groups(self, csv_path):
+        self.create_tables()
+        c = self.conn.cursor()
+        with open(csv_path) as groups_csv:
+             groups_reader = csv.reader(groups_csv)
+             for group in groups_reader:
+                 t = tuple(group[3:6])
+                 c.execute("INSERT OR IGNORE INTO groups"
+                           "(codice_1, codice_2, codice_3)"
+                           "VALUES (?, ?, ?)", t)
+        self.conn.commit()

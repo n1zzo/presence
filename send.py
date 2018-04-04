@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-from email.message import EmailMessage
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -14,7 +13,7 @@ def email(code, recipient, config):
     msg['Subject'] = 'QR Code per la registrazione al laboratorio'
     msg['From'] = config["SMTP"]["sender"]
     msg['To'] = recipient
-    
+
     html = """\
     <html>
       <head></head>
@@ -31,13 +30,17 @@ def email(code, recipient, config):
       </body>
     </html>
     """
-    
+
     msgHtml = MIMEText(html, 'html')
     msgImg = MIMEImage(create_qrcode(code), name="qrcode.png")
     msgImg.add_header('Content-ID', '<qrcode>')
-    msgImg.add_header('Content-Disposition', 'attachment', filename="qrcode.png")
-    msgImg.add_header('Content-Disposition', 'inline', filename="qrcode.png")
-    
+    msgImg.add_header('Content-Disposition',
+                      'attachment',
+                      filename="qrcode.png")
+    msgImg.add_header('Content-Disposition',
+                      'inline',
+                      filename="qrcode.png")
+
     msg.attach(msgHtml)
     msg.attach(msgImg)
 
@@ -48,8 +51,24 @@ def email(code, recipient, config):
     s.quit()
 
 
+def message(subject, text, recipient, config):
+    msg = MIMEText(text)
+    msg['Subject'] = subject
+    msg['From'] = config["SMTP"]["sender"]
+    msg['To'] = recipient
+
+    s = smtplib.SMTP(config["SMTP"]["server"])
+    s.starttls()
+    s.login(config["SMTP"]["login"], config["SMTP"]["password"])
+    s.send_message(msg)
+    s.quit()
+
+
 def create_qrcode(data):
     qr = pyqrcode.create(data)
-    qr.png("code.png", scale=12, module_color=[0xF4, 0x22, 0x72], background=[0x20, 0x20, 0x20])
+    qr.png("code.png",
+           scale=12,
+           module_color=[0xF4, 0x22, 0x72],
+           background=[0x20, 0x20, 0x20])
     with open("code.png", "rb") as f:
         return f.read()

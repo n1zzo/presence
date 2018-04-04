@@ -1,0 +1,13 @@
+Buongiorno,
+il tuo gruppo ha subito delle modifiche,
+ora appartieni al gruppo numero {numero_gruppo}
+i membri del tuo gruppo sono:
+{codice_persona1} {nome1} 
+{codice_persona2} {nome2} 
+{codice_persona3} {nome3} 
+
+Per eventuali problematiche contattateci tramite il forum BeeP.
+
+Buon lavoro,
+
+Niccolò, Enrico

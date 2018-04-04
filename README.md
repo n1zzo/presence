@@ -98,6 +98,45 @@
  "timestamp": INTEGER }
 ```
 
+## Groups Composition
+
+| API            | Description                    |
+|----------------|--------------------------------|
+| **URL**        | `/groups`                      |
+| **Method**     | `GET`                          |
+| **URL Params** | **Required:** `section=STRING` |
+
+### Response Example
+
+```
+{"list": [{"id": INTEGER,
+           "members": [{"codice_persona": STRING,
+                        "matricola": STRING,
+                        "nome": STRING,
+                        "email": STRING}, ...]}, ...],
+ "timestamp": INTEGER }
+```
+
+## Groups Info
+
+| API            | Description                                     |
+|----------------|-------------------------------------------------|
+| **URL**        | `/groupinfo`                                    |
+| **Method**     | `GET`                                           |
+| **URL Params** | **Required:** `section=STRING, groupid=INTEGER` |
+
+### Response Example
+
+```
+{"id": INTEGER,
+ "score": INTEGER,
+ "repo": STRING,
+ "compiles": BOOLEAN,
+ "passed_tests": INTEGER,
+ "sessions": [SESSION, ...],
+ "timestamp": INTEGER }
+```
+
 ## Curl Examples
 
 ### Get students list
