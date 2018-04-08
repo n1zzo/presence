@@ -1,6 +1,6 @@
 # Personal information and credentials
 students*.db
-studenti_*.csv
+*.csv
 config.toml
 code.png
 
