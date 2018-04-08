@@ -49,8 +49,13 @@ class DB:
                      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                      codice_1 TEXT NOT NULL,
                      codice_2 TEXT NOT NULL,
-                     codice_3 TEXT,
-                     repo TEXT)''')
+                     codice_3 TEXT)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS groupinfo (
+                     id INTEGER NOT NULL PRIMARY KEY,
+                     score INTEGER,
+                     repo TEXT,
+                     compiles INTEGER,
+                     passed_tests INTEGER)''')
         self.conn.commit()
 
     def get_students(self, student_id=None):
@@ -162,3 +167,52 @@ class DB:
                            "(codice_1, codice_2, codice_3)"
                            "VALUES (?, ?, ?)", t)
         self.conn.commit()
+
+    def import_repos(self, csv_path):
+        self.create_tables()
+        c = self.conn.cursor()
+        with open(csv_path) as groups_csv:
+             groups_reader = csv.reader(groups_csv)
+             for group in groups_reader:
+                 print(group)
+                 t = (group[1], group[0])
+                 c.execute("UPDATE groupinfo "
+                           "SET repo = ? "
+                           "WHERE id = ?", t)
+        self.conn.commit()
+
+    def get_groups(self):
+        groups = []
+        c = self.conn.cursor()
+        c.execute('SELECT * FROM groups')
+        rows = c.fetchall()
+        for row in rows:
+            group = {}
+            group["id"] = row[0]
+            group["members"] = []
+            for member_id in row[1:4]:
+                if member_id is not "":
+                    student = self.get_students(student_id=member_id)
+                    group["members"].append(student)
+            groups.append(group)
+        self.conn.commit()
+        return groups
+
+    def get_group_info(self, group_id):
+        groups = []
+        c = self.conn.cursor()
+        t = (group_id,)
+        c.execute('SELECT * FROM groupinfo '
+                  'WHERE id = ?', t)
+        rows = c.fetchall()
+        for row in rows:
+            group = {}
+            group["id"] = row[0]
+            group["score"] = row[1]
+            group["repo"] = row[2]
+            group["compiles"] = row[3]
+            group["passed_tests"] = row[4]
+            group["sessions"] = []
+            groups.append(group)
+        self.conn.commit()
+        return groups

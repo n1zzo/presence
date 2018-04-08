@@ -126,9 +126,56 @@ class Timer:
                                 'timestamp': int(time.time())})
 
 
+class Groups:
+    def on_get(self, req, resp):
+        """Handles GET requests"""
+        content = {}
+        params = req.params
+        try:
+            section = params["section"]
+            with DB(section) as db:
+                content["list"] = db.get_groups()
+        except KeyError:
+            resp.status = falcon.HTTP_500
+            resp.body = get_error_json("Missing call parameter!")
+            return
+        except FileNotFoundError:
+            resp.status = falcon.HTTP_500
+            resp.body = get_error_json("Section does not exists!")
+            return
+        content["timestamp"] = int(time.time())
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(content)
+
+
+class GroupInfo:
+    def on_get(self, req, resp):
+        """Handles GET requests"""
+        content = {}
+        params = req.params
+        try:
+            section = params["section"]
+            groupid = params["groupid"]
+            with DB(section) as db:
+                content["list"] = db.get_group_info(groupid)
+        except KeyError:
+            resp.status = falcon.HTTP_500
+            resp.body = get_error_json("Missing call parameter!")
+            return
+        except FileNotFoundError:
+            resp.status = falcon.HTTP_500
+            resp.body = get_error_json("Section does not exists!")
+            return
+        content["timestamp"] = int(time.time())
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(content)
+
+
 api = falcon.API()
 api.add_route('/list', StudentsList())
 api.add_route('/registered', Registered())
 api.add_route('/notyet', NotYet())
 api.add_route('/register', Register())
 api.add_route('/timer', Timer())
+api.add_route('/groups', Groups())
+api.add_route('/groupinfo', GroupInfo())
