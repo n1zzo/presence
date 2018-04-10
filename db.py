@@ -133,9 +133,13 @@ class DB:
         with open(csv_path) as csv_file:
             students_reader = csv.reader(csv_file)
             for student in students_reader:
-                s = Student(*(student + [None]))
-                t = (s.codice_persona, s.matricola, s.nome, s.email)
-                c.execute("INSERT INTO students VALUES (?, ?, ?, ?)", t)
+                s = Student(*(student + 2 * [None]))
+                t = (s.codice_persona,
+                     s.matricola,
+                     s.nome,
+                     s.email,
+                     s.gruppo)
+                c.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", t)
         self.conn.commit()
 
     def register(self, student_id, lab_id):

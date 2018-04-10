@@ -87,7 +87,7 @@ Options:
             open(dbname, 'a').close()
             with DB(section) as db:
                 db.import_students(argv[2])
-        if argv[1] == "--import-groups" and len(argv) >= 4:
+        elif argv[1] == "--import-groups" and len(argv) >= 4:
             section = argv[3]
             with DB(section) as db:
                 db.import_groups(argv[2])
