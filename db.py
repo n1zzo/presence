@@ -193,7 +193,7 @@ class DB:
             for member_id in row[1:4]:
                 if member_id is not "":
                     student = self.get_students(student_id=member_id)
-                    group["members"].append(student)
+                    group["members"].extend(student)
             groups.append(group)
         self.conn.commit()
         return groups
