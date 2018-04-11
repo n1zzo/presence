@@ -1,4 +1,5 @@
 from db import DB
+from falcon_cors import CORS
 import falcon
 import json
 import time
@@ -171,7 +172,12 @@ class GroupInfo:
         resp.body = json.dumps(content)
 
 
-api = falcon.API()
+cors = CORS(allow_origins_list=['http://localhost:8000'],
+            allow_all_headers=True,
+            allow_all_methods=True)
+
+
+api = falcon.API(middleware=[cors.middleware])
 api.add_route('/list', StudentsList())
 api.add_route('/registered', Registered())
 api.add_route('/notyet', NotYet())
