@@ -69,7 +69,12 @@ class DB:
                       'WHERE codice_persona = ?', t)
         rows = c.fetchall()
         for row in rows:
-            student = Student(*(row + ([], )))._asdict()
+            student = Student(codice_persona=row[0],
+                              matricola=row[1],
+                              nome=row[2],
+                              email=row[3],
+                              gruppo=row[4],
+                              sessions=[])._asdict()
             students.append(student)
         self.conn.commit()
         return students

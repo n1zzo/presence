@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 
 from db import DB
-from sys import argv
 from pprint import pprint
+from sys import argv
+import csv
 import send
 import time
 import toml
@@ -67,6 +68,25 @@ def notify_groups(section):
                          s3[3],
                          config)
 
+def jenkins_data(section):
+    with DB(section) as db:
+        groups = db.get_groups()
+        csv_content = []
+        for group in groups:
+            group["members"] = list(map(lambda s: s["email"], group["members"]))
+            group["repo"] = db.get_group_info(group["id"])[0]["repo"]
+            group["pom_path"] = "pom.xml"
+            csv_list = [group["id"]]
+            csv_list.extend(group["members"])
+            csv_list.extend([None] * (4 - len(group["members"])))
+            csv_list.append(group["repo"])
+            csv_list.append(group["pom_path"])
+            csv_content.append(csv_list)
+        with open('jenkins-' + section + '.csv', 'w') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',')
+            for row in csv_content:
+                csvwriter.writerow(row)
+
 
 def main():
     if len(argv) < 2:
@@ -77,7 +97,8 @@ Options:
 --import-groups CSV SECTION    import the csv containing student groups
 --notify        CODE EMAIL     send the qr-code to the selected email
 --notify-all    SECTION        send the qr-code to the students of a section
---notify-groups SECTION        notify groups about something""")
+--notify-groups SECTION        notify groups about something
+--jenkins       SECTION        generate jenkins data""")
         return
     else:
         if argv[1] == "--import" and len(argv) >= 4:
@@ -99,6 +120,9 @@ Options:
         elif argv[1] == "--notify-groups" and len(argv) >= 3:
             section = argv[2]
             notify_groups(section)
+        elif argv[1] == "--jenkins" and len(argv) >= 3:
+            section = argv[2]
+            jenkins_data(section)
         else:
             print("Error: unknown command line parameters")
 

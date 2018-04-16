@@ -17,6 +17,7 @@ services:
       - VIRTUAL_PORT=8000
       - LETSENCRYPT_HOST=presence.izzo.pro
       - LETSENCRYPT_EMAIL=federico.izzo42@gmail.com
+      - PRE_SHARED_KEY
 
 networks:
   proxy-network:

@@ -68,7 +68,7 @@ def create_qrcode(data):
     qr = pyqrcode.create(data)
     qr.png("code.png",
            scale=12,
-           module_color=[0xF4, 0x22, 0x72],
-           background=[0x20, 0x20, 0x20])
+           module_color=[0x00, 0x00, 0x00],
+           background=[0xff, 0xff, 0xff])
     with open("code.png", "rb") as f:
         return f.read()
