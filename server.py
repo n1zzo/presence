@@ -130,13 +130,6 @@ class Register:
     def on_post(self, req, resp):
         students = []
         req_json = json.loads(req.stream.read().decode('utf-8'))
-        if not handle_authentication(req_json):
-            #resp.status = falcon.HTTP_401
-            #resp.body = get_error_json("Unauthorized access!")
-            #return
-            content["auth"] = "failed"
-        else:
-            content["auth"] = "success"
         try:
             section = req_json["section"]
             with DB(section) as db:
@@ -159,13 +152,6 @@ class Register:
 class Timer:
     def on_post(self, req, resp):
         req_json = json.loads(req.stream.read().decode('utf-8'))
-        if not handle_authentication(req_json):
-            #resp.status = falcon.HTTP_401
-            #resp.body = get_error_json("Unauthorized access!")
-            #return
-            content["auth"] = "failed"
-        else:
-            content["auth"] = "success"
         try:
             section = req_json["section"]
             action = req_json["action"]
