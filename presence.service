@@ -1,0 +1,15 @@
+[Unit]
+Description=Presence Backend Server
+After=network.target
+
+[Service]
+Type=simple
+# Another Type option: forking
+User=nizzo
+WorkingDirectory=/home/nizzo/presence
+ExecStart=/home/nizzo/.local/bin/gunicorn server:api --bind=0.0.0.0:8000
+Restart=always
+Environment="PRE_SHARED_KEY=calasso_rulez"
+
+[Install]
+WantedBy=multi-user.target

@@ -8,7 +8,7 @@ from collections import namedtuple
 
 
 Student = namedtuple("student",
-                     "codice_persona matricola nome email gruppo sessions")
+                     "codice_persona matricola nome email gruppo ff sessions")
 
 Session = namedtuple("session", "begin end")
 
@@ -37,7 +37,7 @@ class DB:
         # Create table
         c.execute('''CREATE TABLE IF NOT EXISTS students (
                      codice_persona text, matricola text,
-                     nome text, email text, `group` INTEGER)''')
+                     nome text, email text, `group` INTEGER, ff BOOLEAN)''')
         c.execute('''CREATE TABLE IF NOT EXISTS registrations (
                      codice_persona TEXT, lab_id INTEGER, timestamp INTEGER,
                      UNIQUE(codice_persona, lab_id))''')
@@ -74,6 +74,7 @@ class DB:
                               nome=row[2],
                               email=row[3],
                               gruppo=row[4],
+                              foreign=row[5],
                               sessions=[])._asdict()
             students.append(student)
         self.conn.commit()
@@ -89,7 +90,7 @@ class DB:
                   'ORDER BY timestamp', t)
         rows = c.fetchall()
         for row in rows:
-            student = Student(*(row[0:5] + ([], )))._asdict()
+            student = Student(*(row[0:6] + ([], )))._asdict()
             # Extract sessions from DB
             t = (student["codice_persona"], lab_id)
             c.execute('SELECT begin, end FROM analytics '
@@ -138,13 +139,14 @@ class DB:
         with open(csv_path) as csv_file:
             students_reader = csv.reader(csv_file)
             for student in students_reader:
-                s = Student(*(student + 2 * [None]))
+                s = Student(*(student + 3 * [None]))
                 t = (s.codice_persona,
                      s.matricola,
                      s.nome,
                      s.email,
-                     s.gruppo)
-                c.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", t)
+                     s.gruppo,
+                     s.ff)
+                c.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?, ?)", t)
         self.conn.commit()
 
     def register(self, student_id, lab_id):
