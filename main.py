@@ -39,34 +39,25 @@ def notify_groups(section):
     config = load_config()
     students = []
     email = ""
-    with open("email_gruppo_2.txt", "r") as f:
+    with open("email_gruppo_3.txt", "r") as f:
         template = f.read()
     try:
         with DB(section) as db:
-            students = db.get_groups()
+            groups = db.get_groups()
     except FileNotFoundError:
         print("Database section " + section + " does not exists!")
-    for i in range(0, len(students), 1):
-        s1 = students[i]
-        s2 = students[i+1]
-        s3 = students[i+2]
-        if s1[0] in {58, 61, 62, 63}:
-            email = template.format(numero_gruppo=s1[0],
-                                    nome1=s1[2], codice_persona1=s1[1],
-                                    nome2=s2[2], codice_persona2=s2[1],
-                                    nome3=s3[2], codice_persona3=s3[1])
-            print("[Prova Finale] Obiettivi da Completare entro 06/04/18",
-                         email,
-                         s1[3],
-                         config)
-            print("[Prova Finale] Obiettivi da Completare entro 06/04/18",
-                         email,
-                         s2[3],
-                         config)
-            print("[Prova Finale] Obiettivi da Completare entro 06/04/18",
-                         email,
-                         s3[3],
-                         config)
+    for g in groups:
+        if g["id"] not in [27, 29, 50]:
+            continue
+        email = template.format(numero_gruppo=g["id"],
+                                nome1=g["members"][0]["nome"], codice_persona1=g["members"][0]["codice_persona"],
+                                nome2=g["members"][1]["nome"], codice_persona2=g["members"][1]["codice_persona"],
+                                nome3=g["members"][2]["nome"], codice_persona3=g["members"][2]["codice_persona"])
+        for member in g["members"]:
+            print(f"Sending email to group {g['id']}")
+            send.message("[Prova Finale] URGENTE: mancanza comunicazione URL repository", email, member["email"], config)
+            time.sleep(1)
+
 
 def jenkins_data(section):
     with DB(section) as db:
@@ -95,6 +86,7 @@ def main():
 Options:
 --import        CSV SECTION    import the csv containing student infos
 --import-groups CSV SECTION    import the csv containing student groups
+--import-repos  CSV SECTION    import the csv containing groups repositories
 --notify        CODE EMAIL     send the qr-code to the selected email
 --notify-all    SECTION        send the qr-code to the students of a section
 --notify-groups SECTION        notify groups about something
@@ -112,6 +104,10 @@ Options:
             section = argv[3]
             with DB(section) as db:
                 db.import_groups(argv[2])
+        elif argv[1] == "--import-repos" and len(argv) >= 4:
+            section = argv[3]
+            with DB(section) as db:
+                db.import_repos(argv[2])
         elif argv[1] == "--notify":
             notify(argv[2], argv[3])
         elif argv[1] == "--notify-all" and len(argv) >= 3:

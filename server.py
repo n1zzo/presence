@@ -16,6 +16,9 @@ def get_error_json(string):
 
 
 def handle_authentication(params):
+    # Bypass authentication in debug mode
+    if os.environ.get('DEBUG') is not None:
+        return True
     if "auth" not in params:
         return False
     authenticated_params = {x: params[x] for x in params if x != "auth"}

@@ -8,7 +8,7 @@ from collections import namedtuple
 
 
 Student = namedtuple("student",
-                     "codice_persona matricola nome email gruppo ff sessions")
+                     "codice_persona matricola nome email gruppo ff nofreq sessions")
 
 Session = namedtuple("session", "begin end")
 
@@ -37,7 +37,7 @@ class DB:
         # Create table
         c.execute('''CREATE TABLE IF NOT EXISTS students (
                      codice_persona text, matricola text,
-                     nome text, email text, `group` INTEGER, ff BOOLEAN)''')
+                     nome text, email text, `group` INTEGER, ff BOOLEAN, nofreq BOOLEAN)''')
         c.execute('''CREATE TABLE IF NOT EXISTS registrations (
                      codice_persona TEXT, lab_id INTEGER, timestamp INTEGER,
                      UNIQUE(codice_persona, lab_id))''')
@@ -74,8 +74,10 @@ class DB:
                               nome=row[2],
                               email=row[3],
                               gruppo=row[4],
-                              foreign=row[5],
+                              ff=(row[5] == "true"),
+                              nofreq=(row[6] == "true"),
                               sessions=[])._asdict()
+            print(students)
             students.append(student)
         self.conn.commit()
         return students
@@ -90,7 +92,7 @@ class DB:
                   'ORDER BY timestamp', t)
         rows = c.fetchall()
         for row in rows:
-            student = Student(*(row[0:6] + ([], )))._asdict()
+            student = Student(*(row[0:7] + ([], )))._asdict()
             # Extract sessions from DB
             t = (student["codice_persona"], lab_id)
             c.execute('SELECT begin, end FROM analytics '
@@ -145,7 +147,8 @@ class DB:
                      s.nome,
                      s.email,
                      s.gruppo,
-                     s.ff)
+                     s.ff,
+                     s.nofreq)
                 c.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?, ?)", t)
         self.conn.commit()
 
@@ -178,18 +181,29 @@ class DB:
                            "(codice_1, codice_2, codice_3)"
                            "VALUES (?, ?, ?)", t)
         self.conn.commit()
+        # Update students table with group number
+        c.execute('UPDATE students set "group" = '
+                  '(select groups.id from groups where '
+                  'students.codice_persona = groups.codice_1 or '
+                  'students.codice_persona = groups.codice_2 or '
+                  'students.codice_persona = groups.codice_3) where '
+                  'exists (select groups.id from groups where '
+                  'students.codice_persona = groups.codice_1 or '
+                  'students.codice_persona = groups.codice_2 or '
+                  'students.codice_persona = groups.codice_3)')
+         
 
     def import_repos(self, csv_path):
         self.create_tables()
         c = self.conn.cursor()
         with open(csv_path) as groups_csv:
              groups_reader = csv.reader(groups_csv)
+             # Skip first line (fields description)
+             next(groups_reader, None)
              for group in groups_reader:
-                 print(group)
-                 t = (group[1], group[0])
-                 c.execute("UPDATE groupinfo "
-                           "SET repo = ? "
-                           "WHERE id = ?", t)
+                 t = (group[2], int(group[1]))
+                 c.execute("REPLACE INTO groupinfo(repo, id) "
+                           "values(?,?)", t)
         self.conn.commit()
 
     def get_groups(self):

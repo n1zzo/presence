@@ -27,6 +27,12 @@ def email(code, recipient, config):
         <p>
            <img src="cid:qrcode">
         </p>
+
+        Ricordati di compilare il Google form con i dati del tuo gruppo,
+        sono un membro del gruppo deve compilarlo, con i dati di tutti e tre
+        i componenti.
+
+        Il form lo trovate al seguente url: <a href="https://goo.gl/forms/HSIQ9z6jpsgQIoVz1">https://goo.gl/forms/HSIQ9z6jpsgQIoVz1</a>
       </body>
     </html>
     """
@@ -44,11 +50,17 @@ def email(code, recipient, config):
     msg.attach(msgHtml)
     msg.attach(msgImg)
 
-    s = smtplib.SMTP(config["SMTP"]["server"])
-    s.starttls()
-    s.login(config["SMTP"]["login"], config["SMTP"]["password"])
-    s.send_message(msg)
-    s.quit()
+    while True:
+        try:
+            s = smtplib.SMTP(config["SMTP"]["server"])
+            s.starttls()
+            s.login(config["SMTP"]["login"], config["SMTP"]["password"])
+            s.send_message(msg)
+            s.quit()
+            break
+        except Exception as e:
+            print(str(e)+"...retrying!")
+            continue
 
 
 def message(subject, text, recipient, config):
@@ -57,11 +69,17 @@ def message(subject, text, recipient, config):
     msg['From'] = config["SMTP"]["sender"]
     msg['To'] = recipient
 
-    s = smtplib.SMTP(config["SMTP"]["server"])
-    s.starttls()
-    s.login(config["SMTP"]["login"], config["SMTP"]["password"])
-    s.send_message(msg)
-    s.quit()
+    while True:
+        try:
+            s = smtplib.SMTP(config["SMTP"]["server"])
+            s.starttls()
+            s.login(config["SMTP"]["login"], config["SMTP"]["password"])
+            s.send_message(msg)
+            s.quit()
+            break
+        except Exception as e:
+            print(str(e)+"...retrying!")
+            continue
 
 
 def create_qrcode(data):
